@@ -34,48 +34,66 @@ if (isset($_GET['delete'])) {
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Реестр сотрудников</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 30px; }
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid #ddd; padding: 8px; }
-        th { background: #4CAF50; color: white; }
-        .btn { padding: 6px 12px; color: white; text-decoration: none; border-radius: 4px; }
-        .btn-add { background: #4CAF50; }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <a href="projects.php?workspace_id=<?= $workspace_id ?>">← К проектам</a>
-    <h1>Реестр сотрудников</h1>
-    
-    <?php if (hasPermission('manage_employees')): ?>
-    <a href="employee_edit.php?workspace_id=<?= $workspace_id ?>" class="btn btn-add">+ Добавить сотрудника</a>
-    <?php endif; ?>
-    
-    <table>
-        <tr>
-            <th>ID</th>
-            <th>Фамилия</th>
-            <th>Имя</th>
-            <th>Должность</th>
-            <th>Оклад, ₽</th>
-            <th>Налог, %</th>
-            <th>Действия</th>
-        </tr>
-        <?php foreach ($employees as $e): ?>
-        <tr>
-            <td><?= $e['id'] ?></td>
-            <td><?= htmlspecialchars($e['last_name']) ?></td>
-            <td><?= htmlspecialchars($e['first_name']) ?></td>
-            <td><?= htmlspecialchars($e['position']) ?></td>
-            <td><?= number_format($e['salary'], 0) ?></td>
-            <td><?= $e['tax_rate'] ?></td>
-            <td>
-                <a href="employee_edit.php?id=<?= $e['id'] ?>&workspace_id=<?= $workspace_id ?>" class="btn" style="background:#2196F3">Ред.</a>
-                <a href="?delete=<?= $e['id'] ?>&workspace_id=<?= $workspace_id ?>" class="btn" style="background:#f44336" onclick="return confirm('Удалить?')">Уд.</a>
-            </td>
-        </tr>
-        <?php endforeach; ?>
-    </table>
+    <div class="container">
+        <a href="projects.php?workspace_id=<?= $workspace_id ?>" class="back-link">← К проектам</a>
+
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h1>👨‍💼 Реестр сотрудников</h1>
+                    <p class="page-subtitle">Штатные сотрудники компании</p>
+                </div>
+                <?php if (hasPermission('manage_employees')): ?>
+                    <a href="employee_edit.php?workspace_id=<?= $workspace_id ?>" class="btn btn-success">+ Добавить сотрудника</a>
+                <?php endif; ?>
+            </div>
+
+            <?php if (empty($employees)): ?>
+                <div class="text-center" style="padding:30px 0; color:var(--gray-500);">
+                    <p>Пока нет сотрудников</p>
+                </div>
+            <?php else: ?>
+                <div class="table-wrapper">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Фамилия</th>
+                                <th>Имя</th>
+                                <th>Должность</th>
+                                <th>Оклад, ₽</th>
+                                <th>Налог, %</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($employees as $e): ?>
+                            <tr>
+                                <td><?= $e['id'] ?></td>
+                                <td><?= htmlspecialchars($e['last_name']) ?></td>
+                                <td><?= htmlspecialchars($e['first_name']) ?></td>
+                                <td><?= htmlspecialchars($e['position']) ?></td>
+                                <td><?= number_format($e['salary'], 0) ?></td>
+                                <td><?= $e['tax_rate'] ?></td>
+                                <td>
+                                    <div class="actions">
+                                        <a href="employee_edit.php?id=<?= $e['id'] ?>&workspace_id=<?= $workspace_id ?>" class="btn btn-info btn-sm">✏️ Ред.</a>
+                                        <a href="?delete=<?= $e['id'] ?>&workspace_id=<?= $workspace_id ?>" class="btn btn-danger btn-sm" 
+                                           onclick="return confirm('Удалить?')">🗑️ Уд.</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
 </body>
 </html>

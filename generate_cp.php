@@ -13,9 +13,7 @@ $stmt = $db->prepare("SELECT * FROM project_resources WHERE project_id = ? ORDER
 $stmt->execute([$project_id]);
 $resources = $stmt->fetchAll();
 
-
 $settings = $db->query("SELECT * FROM company_settings LIMIT 1")->fetch();
-
 
 $customer = null;
 if ($project['customer_id']) {
@@ -24,10 +22,8 @@ if ($project['customer_id']) {
     $customer = $stmt->fetch();
 }
 
-
 $totalWithMargin = 0;
 foreach ($resources as &$r) {
-
     switch ($r['resource_type']) {
         case 'Сотрудник':
             $emp = $db->prepare("SELECT salary, tax_rate FROM employees WHERE id = ?");
@@ -48,7 +44,6 @@ foreach ($resources as &$r) {
         default:
             $r['cost_price'] = $r['quantity'] * $r['unit_cost'];
     }
-    
     $r['total_cost'] = calcTotalWithMargin($r['cost_price'], $r['margin_percent'] ?? 0);
     $totalWithMargin += $r['total_cost'];
 }
@@ -60,64 +55,80 @@ $totalWithTax = calcProjectTotal($totalWithMargin, $project['tax_rate'] ?? 6);
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Коммерческое предложение</title>
+    <link rel="stylesheet" href="style.css">
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
-        .header { text-align: center; margin-bottom: 40px; }
-        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        th, td { border: 1px solid #000; padding: 8px; text-align: left; }
-        th { background: #f0f0f0; }
-        .total { font-weight: bold; }
+        .doc-header { text-align: center; margin-bottom: 40px; }
+        .doc-header h1 { font-size: 24px; }
+        .doc-footer { margin-top: 40px; border-top: 1px solid var(--gray-200); padding-top: 20px; }
+        @media print {
+            .no-print { display: none !important; }
+            body { padding: 20px; background: white; }
+            .card { box-shadow: none; border: 1px solid #ddd; }
+        }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Коммерческое предложение</h1>
-        <p>Дата: <?= date('d.m.Y') ?></p>
+    <div class="container">
+        <div class="no-print">
+            <a href="project_manage.php?id=<?= $project_id ?>" class="back-link">← К проекту</a>
+            <a href="#" onclick="window.print()" class="btn btn-primary" style="float:right;">🖨️ Печать / PDF</a>
+            <div style="clear:both;"></div>
+        </div>
+
+        <div class="card">
+            <div class="doc-header">
+                <h1>Коммерческое предложение</h1>
+                <p>Дата: <?= date('d.m.Y') ?></p>
+            </div>
+
+            <?php if ($customer): ?>
+            <p><strong>Заказчику:</strong><br>
+               <?= htmlspecialchars($customer['director_name'] ?? '') ?><br>
+               <?= htmlspecialchars($customer['name'] ?? $customer['director_name'] ?? $customer['email'] ?? '') ?></p>
+            <?php endif; ?>
+
+            <h2><?= htmlspecialchars($project['name']) ?></h2>
+            <p><strong>Срок выполнения:</strong> <?= $project['start_date'] ?> — <?= $project['end_date'] ?></p>
+
+            <div class="table-wrapper">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>№</th>
+                            <th>Наименование услуги</th>
+                            <th>Кол-во</th>
+                            <th>Ед.</th>
+                            <th>Период</th>
+                            <th>Стоимость, ₽</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php $i = 1; foreach ($resources as $r): ?>
+                        <tr>
+                            <td><?= $i++ ?></td>
+                            <td><?= htmlspecialchars($r['service_name']) ?></td>
+                            <td><?= $r['quantity'] ?></td>
+                            <td><?= $r['unit_type'] ?></td>
+                            <td><?= $r['start_date'] ?> — <?= $r['end_date'] ?></td>
+                            <td><?= number_format($r['total_cost'], 2) ?></td>
+                        </tr>
+                        <?php endforeach; ?>
+                        <tr style="font-weight:bold; background:var(--success-light);">
+                            <td colspan="5"><strong>Итого с НДС:</strong></td>
+                            <td><strong><?= number_format($totalWithTax, 2) ?> ₽</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="doc-footer">
+                <p>С уважением,<br>
+                   <?= htmlspecialchars($settings['director_position'] ?? 'Генеральный директор') ?> 
+                   <?= htmlspecialchars($settings['director_name'] ?? '') ?></p>
+            </div>
+        </div>
     </div>
-
-    <?php if ($customer): ?>
-    <p><strong>Заказчику:</strong><br>
-       <?= htmlspecialchars($customer['director_name'] ?? '') ?><br>
-       <?= htmlspecialchars($customer['name'] ?? $customer['director_name'] ?? $customer['email'] ?? '') ?></p>
-    <?php endif; ?>
-
-    <h2><?= htmlspecialchars($project['name']) ?></h2>
-    <p><strong>Срок выполнения:</strong> <?= $project['start_date'] ?> — <?= $project['end_date'] ?></p>
-
-    <table>
-        <tr>
-            <th>№</th>
-            <th>Наименование услуги</th>
-            <th>Кол-во</th>
-            <th>Ед.</th>
-            <th>Период</th>
-            <th>Стоимость, ₽</th>
-        </tr>
-        <?php 
-        $i = 1;
-        foreach ($resources as $r): 
-            $cost = $r['total_cost'];
-        ?>
-        <tr>
-            <td><?= $i++ ?></td>
-            <td><?= htmlspecialchars($r['service_name']) ?></td>
-            <td><?= $r['quantity'] ?></td>
-            <td><?= $r['unit_type'] ?></td>
-            <td><?= $r['start_date'] ?> — <?= $r['end_date'] ?></td>
-            <td><?= number_format($cost, 2) ?></td>
-        </tr>
-        <?php endforeach; ?>
-        <tr class="total">
-            <td colspan="5"><strong>Итого с НДС:</strong></td>
-            <td><strong><?= number_format($totalWithTax, 2) ?> ₽</strong></td>
-        </tr>
-    </table>
-
-    <p>С уважением,<br>
-       <?= htmlspecialchars($settings['director_position'] ?? 'Генеральный директор') ?> 
-       <?= htmlspecialchars($settings['director_name'] ?? '') ?></p>
-
-    <p><a href="#" onclick="window.print()">Печать / Сохранить как PDF</a></p>
 </body>
 </html>

@@ -13,7 +13,6 @@ if (!$resource_id) {
     exit;
 }
 
-
 $stmt = $db->prepare("SELECT * FROM project_resources WHERE id = ?");
 $stmt->execute([$resource_id]);
 $resource = $stmt->fetch();
@@ -32,13 +31,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $unit_cost = (float)$_POST['unit_cost'];
     $margin_percent = (float)$_POST['margin_percent'];
 
-    $stmt = $db->prepare("UPDATE project_resources SET 
-        resource_name=?, service_name=?, start_date=?, end_date=?, 
-        quantity=?, unit_type=?, unit_cost=?, margin_percent=? 
-        WHERE id=?");
-    
-    $stmt->execute([$resource_name, $service_name, $start_date, $end_date, 
-                    $quantity, $unit_type, $unit_cost, $margin_percent, $resource_id]);
+    $stmt = $db->prepare("UPDATE project_resources SET resource_name=?, service_name=?, start_date=?, end_date=?, quantity=?, unit_type=?, unit_cost=?, margin_percent=? WHERE id=?");
+    $stmt->execute([$resource_name, $service_name, $start_date, $end_date, $quantity, $unit_type, $unit_cost, $margin_percent, $resource_id]);
 
     header("Location: project_manage.php?id=$project_id");
     exit;
@@ -49,49 +43,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Редактирование ресурса</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 30px; }
-        form { max-width: 700px; }
-        label { display: block; margin: 12px 0 5px; font-weight: bold; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
-        button { background: #4CAF50; color: white; padding: 12px 25px; border: none; border-radius: 4px; cursor: pointer; }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <a href="project_manage.php?id=<?= $project_id ?>">← Назад к проекту</a>
-    <h1>Редактирование ресурса</h1>
+    <div class="container">
+        <a href="project_manage.php?id=<?= $project_id ?>" class="back-link">← Назад к проекту</a>
 
-    <form method="POST">
-        <label>Название ресурса *</label>
-        <input type="text" name="resource_name" value="<?= htmlspecialchars($resource['resource_name']) ?>" required>
+        <div class="card max-w-lg mx-auto">
+            <div class="card-header">
+                <h1>✏️ Редактирование ресурса</h1>
+            </div>
+            
+            <form method="POST">
+                <div class="form-group">
+                    <label class="form-label">Название ресурса <span class="required">*</span></label>
+                    <input type="text" name="resource_name" class="form-control" value="<?= htmlspecialchars($resource['resource_name']) ?>" required>
+                </div>
 
-        <label>Название услуги *</label>
-        <input type="text" name="service_name" value="<?= htmlspecialchars($resource['service_name'] ?? '') ?>" required>
+                <div class="form-group">
+                    <label class="form-label">Название услуги <span class="required">*</span></label>
+                    <input type="text" name="service_name" class="form-control" value="<?= htmlspecialchars($resource['service_name'] ?? '') ?>" required>
+                </div>
 
-        <label>Дата начала *</label>
-        <input type="date" name="start_date" value="<?= $resource['start_date'] ?>" required>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Дата начала <span class="required">*</span></label>
+                        <input type="date" name="start_date" class="form-control" value="<?= $resource['start_date'] ?>" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Дата окончания <span class="required">*</span></label>
+                        <input type="date" name="end_date" class="form-control" value="<?= $resource['end_date'] ?>" required>
+                    </div>
+                </div>
 
-        <label>Дата окончания *</label>
-        <input type="date" name="end_date" value="<?= $resource['end_date'] ?>" required>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Количество <span class="required">*</span></label>
+                        <input type="number" name="quantity" step="0.01" class="form-control" value="<?= $resource['quantity'] ?>" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Единица измерения <span class="required">*</span></label>
+                        <select name="unit_type" class="form-control" required>
+                            <option value="часы" <?= $resource['unit_type']=='часы'?'selected':'' ?>>Часы</option>
+                            <option value="дни" <?= $resource['unit_type']=='дни'?'selected':'' ?>>Дни</option>
+                            <option value="полная стоимость" <?= $resource['unit_type']=='полная стоимость'?'selected':'' ?>>Полная стоимость</option>
+                        </select>
+                    </div>
+                </div>
 
-        <label>Количество единиц *</label>
-        <input type="number" name="quantity" step="0.01" value="<?= $resource['quantity'] ?>" required>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Стоимость за ед. (₽) <span class="required">*</span></label>
+                        <input type="number" name="unit_cost" step="0.01" class="form-control" value="<?= $resource['unit_cost'] ?>" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Маржинальность (%)</label>
+                        <input type="number" name="margin_percent" step="0.1" class="form-control" value="<?= $resource['margin_percent'] ?? 0 ?>">
+                    </div>
+                </div>
 
-        <label>Единица измерения *</label>
-        <select name="unit_type" required>
-            <option value="часы" <?= $resource['unit_type']=='часы'?'selected':'' ?>>Часы</option>
-            <option value="дни" <?= $resource['unit_type']=='дни'?'selected':'' ?>>Дни</option>
-            <option value="полная стоимость" <?= $resource['unit_type']=='полная стоимость'?'selected':'' ?>>Полная стоимость</option>
-        </select>
-
-        <label>Стоимость за единицу (₽) *</label>
-        <input type="number" name="unit_cost" step="0.01" value="<?= $resource['unit_cost'] ?>" required>
-
-        <label>Маржинальность (%)</label>
-        <input type="number" name="margin_percent" step="0.1" value="<?= $resource['margin_percent'] ?? 0 ?>">
-
-        <button type="submit">Сохранить изменения</button>
-    </form>
+                <button type="submit" class="btn btn-success">💾 Сохранить изменения</button>
+            </form>
+        </div>
+    </div>
 </body>
 </html>

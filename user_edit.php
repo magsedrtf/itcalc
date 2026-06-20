@@ -10,7 +10,6 @@ if (!$user_id) {
 $editId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $allRoles = $db->query("SELECT * FROM roles")->fetchAll();
 
-// Загружаем данные пользователя, если редактируем
 $user = null;
 $userRoles = [];
 if ($editId) {
@@ -23,7 +22,6 @@ if ($editId) {
     $userRoles = $stmt->fetchAll(PDO::FETCH_COLUMN);
 }
 
-// Сохранение
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $lastName = $_POST['last_name'];
     $firstName = $_POST['first_name'];
@@ -35,8 +33,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($editId) {
         $stmt = $db->prepare("UPDATE users SET last_name=?, first_name=?, middle_name=?, email=?, position=? WHERE id=?");
         $stmt->execute([$lastName, $firstName, $middleName, $email, $position, $editId]);
-        
-        // Обновляем роли
         $db->prepare("DELETE FROM user_roles WHERE user_id=?")->execute([$editId]);
     } else {
         $stmt = $db->prepare("INSERT INTO users (last_name, first_name, middle_name, email, position) VALUES (?,?,?,?,?)");
@@ -44,7 +40,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $editId = $db->lastInsertId();
     }
     
-    // Добавляем роли
     $insertRole = $db->prepare("INSERT INTO user_roles (user_id, role_id) VALUES (?,?)");
     foreach ($roles as $roleId) {
         $insertRole->execute([$editId, $roleId]);
@@ -59,56 +54,79 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $editId ? 'Редактирование' : 'Создание' ?> пользователя</title>
+    <link rel="stylesheet" href="style.css">
     <style>
-        body { font-family: Arial, sans-serif; margin: 30px; }
-        h1 { color: #333; }
-        form { max-width: 500px; }
-        label { display: block; margin: 10px 0 5px; font-weight: bold; }
-        input[type="text"], input[type="email"] { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
-        .roles { margin: 10px 0; }
-        .roles label { display: inline-block; margin-right: 15px; font-weight: normal; }
-        button { background: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin-top: 15px; }
-        button:hover { background: #45a049; }
-        .back { margin-bottom: 20px; }
-        .back a { color: #4CAF50; text-decoration: none; }
+        .role-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 0;
+        }
+        .role-checkbox input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        .role-checkbox label {
+            cursor: pointer;
+            font-weight: normal;
+        }
     </style>
 </head>
 <body>
-    <div class="back">
-        <a href="users.php">← К списку пользователей</a>
-    </div>
-    
-    <h1><?= $editId ? '✏️ Редактирование' : '➕ Создание' ?> пользователя</h1>
-    
-    <form method="POST">
-        <label>Фамилия *</label>
-        <input type="text" name="last_name" value="<?= htmlspecialchars($user['last_name'] ?? '') ?>" required>
-        
-        <label>Имя *</label>
-        <input type="text" name="first_name" value="<?= htmlspecialchars($user['first_name'] ?? '') ?>" required>
-        
-        <label>Отчество</label>
-        <input type="text" name="middle_name" value="<?= htmlspecialchars($user['middle_name'] ?? '') ?>">
-        
-        <label>Email *</label>
-        <input type="email" name="email" value="<?= htmlspecialchars($user['email'] ?? '') ?>" required>
-        
-        <label>Должность *</label>
-        <input type="text" name="position" value="<?= htmlspecialchars($user['position'] ?? '') ?>" required>
-        
-        <label>Роли</label>
-        <div class="roles">
-            <?php foreach ($allRoles as $role): ?>
-                <label>
-                    <input type="checkbox" name="roles[]" value="<?= $role['id'] ?>"
-                        <?= in_array($role['id'], $userRoles) ? 'checked' : '' ?>>
-                    <?= htmlspecialchars($role['name']) ?>
-                </label><br>
-            <?php endforeach; ?>
+    <div class="container">
+        <a href="users.php" class="back-link">← К списку пользователей</a>
+
+        <div class="card max-w-md mx-auto">
+            <div class="card-header">
+                <h1><?= $editId ? '✏️ Редактирование' : '➕ Создание' ?> пользователя</h1>
+            </div>
+            
+            <form method="POST">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Фамилия <span class="required">*</span></label>
+                        <input type="text" name="last_name" class="form-control" value="<?= htmlspecialchars($user['last_name'] ?? '') ?>" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Имя <span class="required">*</span></label>
+                        <input type="text" name="first_name" class="form-control" value="<?= htmlspecialchars($user['first_name'] ?? '') ?>" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Отчество</label>
+                    <input type="text" name="middle_name" class="form-control" value="<?= htmlspecialchars($user['middle_name'] ?? '') ?>">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Email <span class="required">*</span></label>
+                    <input type="email" name="email" class="form-control" value="<?= htmlspecialchars($user['email'] ?? '') ?>" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Должность <span class="required">*</span></label>
+                    <input type="text" name="position" class="form-control" value="<?= htmlspecialchars($user['position'] ?? '') ?>" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Роли</label>
+                    <div style="margin-top:6px;">
+                        <?php foreach ($allRoles as $role): ?>
+                            <div class="role-checkbox">
+                                <input type="checkbox" name="roles[]" value="<?= $role['id'] ?>" id="role_<?= $role['id'] ?>"
+                                    <?= in_array($role['id'], $userRoles) ? 'checked' : '' ?>>
+                                <label for="role_<?= $role['id'] ?>"><?= htmlspecialchars($role['name']) ?></label>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-success">💾 Сохранить</button>
+            </form>
         </div>
-        
-        <button type="submit">💾 Сохранить</button>
-    </form>
+    </div>
 </body>
 </html>

@@ -47,39 +47,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $editId ? 'Редактирование' : 'Добавление' ?> сотрудника</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 30px; }
-        form { max-width: 500px; }
-        label { display: block; margin: 10px 0 5px; font-weight: bold; }
-        input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
-        button { background: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin-top: 15px; }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <a href="employees.php?workspace_id=<?= $workspace_id ?>">← К списку сотрудников</a>
-    <h1><?= $editId ? 'Редактирование' : 'Добавление' ?> сотрудника</h1>
-    
-    <form method="POST">
-        <label>Фамилия *</label>
-        <input type="text" name="last_name" value="<?= htmlspecialchars($employee['last_name'] ?? '') ?>" required>
-        
-        <label>Имя *</label>
-        <input type="text" name="first_name" value="<?= htmlspecialchars($employee['first_name'] ?? '') ?>" required>
-        
-        <label>Отчество</label>
-        <input type="text" name="middle_name" value="<?= htmlspecialchars($employee['middle_name'] ?? '') ?>">
-        
-        <label>Должность *</label>
-        <input type="text" name="position" value="<?= htmlspecialchars($employee['position'] ?? '') ?>" required>
-        
-        <label>Оклад в месяц, ₽ *</label>
-        <input type="number" name="salary" value="<?= $employee['salary'] ?? '' ?>" required>
-        
-        <label>Налоговая ставка, %</label>
-        <input type="number" name="tax_rate" step="0.1" value="<?= $employee['tax_rate'] ?? '30.2' ?>" required>
-        
-        <button type="submit">Сохранить</button>
-    </form>
+    <div class="container">
+        <a href="employees.php?workspace_id=<?= $workspace_id ?>" class="back-link">← К списку сотрудников</a>
+
+        <div class="card max-w-md mx-auto">
+            <div class="card-header">
+                <h1><?= $editId ? '✏️ Редактирование' : '➕ Добавление' ?> сотрудника</h1>
+            </div>
+            
+            <form method="POST">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Фамилия <span class="required">*</span></label>
+                        <input type="text" name="last_name" class="form-control" value="<?= htmlspecialchars($employee['last_name'] ?? '') ?>" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Имя <span class="required">*</span></label>
+                        <input type="text" name="first_name" class="form-control" value="<?= htmlspecialchars($employee['first_name'] ?? '') ?>" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Отчество</label>
+                    <input type="text" name="middle_name" class="form-control" value="<?= htmlspecialchars($employee['middle_name'] ?? '') ?>">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Должность <span class="required">*</span></label>
+                    <input type="text" name="position" class="form-control" value="<?= htmlspecialchars($employee['position'] ?? '') ?>" required>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Оклад в месяц, ₽ <span class="required">*</span></label>
+                        <input type="number" name="salary" class="form-control" value="<?= $employee['salary'] ?? '' ?>" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Налоговая ставка, %</label>
+                        <input type="number" name="tax_rate" step="0.1" class="form-control" value="<?= $employee['tax_rate'] ?? '30.2' ?>" required>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-success">💾 Сохранить</button>
+            </form>
+        </div>
+    </div>
 </body>
 </html>

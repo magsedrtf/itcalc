@@ -15,7 +15,6 @@ if (!$project_id) {
     exit;
 }
 
-
 $stmt = $db->prepare("SELECT * FROM projects WHERE id = ?");
 $stmt->execute([$project_id]);
 $project = $stmt->fetch();
@@ -24,20 +23,11 @@ if (!$project) die("Проект не найден");
 
 $workspace_id = $project['workspace_id'];
 
-
 $stmt = $db->prepare("SELECT * FROM project_resources WHERE project_id = ? ORDER BY id");
 $stmt->execute([$project_id]);
 $resources = $stmt->fetchAll();
 
-
-$roleStmt = $db->prepare("SELECT r.name FROM roles r 
-    JOIN user_roles ur ON r.id = ur.role_id 
-    WHERE ur.user_id = ?");
-$roleStmt->execute([$user_id]);
-$userRoles = $roleStmt->fetchAll(PDO::FETCH_COLUMN);
-
 $canSeeMargin = canViewMargin();
-
 
 $totalCostPrice = 0;
 $totalWithMargin = 0;
@@ -52,7 +42,6 @@ foreach ($resources as $r) {
             $data = $emp->fetch();
             $cost_price = $data ? calcEmployeeCostExact($data['salary'], $data['tax_rate'], $r['start_date'], $r['end_date']) : 0;
             break;
-
         case 'Исполнитель':
             $exec = $db->prepare("SELECT contract_type, tax_rate, unit_cost FROM executors WHERE id = ?");
             $exec->execute([$r['resource_id']]);
@@ -60,11 +49,9 @@ foreach ($resources as $r) {
             $tax = ($data && $data['contract_type'] === 'НПД') ? 0 : ($data['tax_rate'] ?? 0);
             $cost_price = calcExecutorCost($r['quantity'], $data['unit_cost'] ?? $r['unit_cost'], $tax);
             break;
-
         case 'Оборудование':
             $cost_price = calcEquipmentCost($r['quantity'], $r['unit_cost']);
             break;
-
         case 'Субподрядчик':
         default:
             $cost_price = $r['quantity'] * $r['unit_cost'];
@@ -91,72 +78,88 @@ $projectTotal = calcProjectTotal($totalWithMargin, $project['tax_rate'] ?? 6);
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Подробный расчёт: <?= htmlspecialchars($project['name']) ?></title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 30px; }
-        table { border-collapse: collapse; width: 100%; margin: 20px 0; }
-        th, td { border: 1px solid #ddd; padding: 10px; }
-        th { background: #4CAF50; color: white; }
-        .total { font-weight: bold; background: #f0f0f0; }
-        .result { background: #e8f5e9; padding: 20px; border-radius: 8px; }
-        .back { margin-bottom: 20px; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Подробный расчёт</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="back">
-        <a href="project_manage.php?id=<?= $project_id ?>">← К управлению проектом</a>
-    </div>
+    <div class="container">
+        <a href="project_manage.php?id=<?= $project_id ?>" class="back-link">← К управлению проектом</a>
 
-    <h1>Подробный расчёт проекта: <?= htmlspecialchars($project['name']) ?></h1>
+        <div class="card">
+            <div class="card-header">
+                <h1>📊 Подробный расчёт</h1>
+                <span style="color:var(--gray-500); font-size:14px;"><?= htmlspecialchars($project['name']) ?></span>
+            </div>
 
-    <table>
-        <tr>
-            <th>Ресурс</th>
-            <th>Тип</th>
-            <th>Услуга</th>
-            <th>Кол-во</th>
-            <th>Ед.</th>
-            <th>Себестоимость</th>
-            <?php if ($canSeeMargin): ?>
-            <th>Маржа %</th>
-            <th>С маржой</th>
-            <th>Прибыль</th>
+            <?php if (empty($calculatedResources)): ?>
+                <div class="text-center" style="padding:40px 0; color:var(--gray-500);">
+                    <p>В проекте пока нет ресурсов для расчёта</p>
+                </div>
+            <?php else: ?>
+                <div class="table-wrapper">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Ресурс</th>
+                                <th>Тип</th>
+                                <th>Услуга</th>
+                                <th>Кол-во</th>
+                                <th>Ед.</th>
+                                <th>Себестоимость</th>
+                                <?php if ($canSeeMargin): ?>
+                                    <th>Маржа %</th>
+                                    <th>С маржой</th>
+                                    <th>Прибыль</th>
+                                <?php endif; ?>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($calculatedResources as $r): ?>
+                            <tr>
+                                <td><?= htmlspecialchars($r['resource_name']) ?></td>
+                                <td><?= $r['resource_type'] ?></td>
+                                <td><?= htmlspecialchars($r['service_name'] ?? '-') ?></td>
+                                <td><?= $r['quantity'] ?></td>
+                                <td><?= $r['unit_type'] ?></td>
+                                <td><?= number_format($r['cost_price'], 2) ?></td>
+                                <?php if ($canSeeMargin): ?>
+                                    <td><?= $r['margin_percent'] ?? 0 ?>%</td>
+                                    <td><?= number_format($r['total_cost'], 2) ?></td>
+                                    <td><?= number_format($r['profit'], 2) ?></td>
+                                <?php endif; ?>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                        <tfoot style="font-weight:bold; background:var(--gray-100);">
+                            <tr>
+                                <td colspan="5">ИТОГО</td>
+                                <td><?= number_format($totalCostPrice, 2) ?></td>
+                                <?php if ($canSeeMargin): ?>
+                                    <td></td>
+                                    <td><?= number_format($totalWithMargin, 2) ?></td>
+                                    <td><?= number_format($totalProfit, 2) ?></td>
+                                <?php endif; ?>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
             <?php endif; ?>
-        </tr>
-        <?php foreach ($calculatedResources as $r): ?>
-        <tr>
-            <td><?= htmlspecialchars($r['resource_name']) ?></td>
-            <td><?= $r['resource_type'] ?></td>
-            <td><?= htmlspecialchars($r['service_name'] ?? '-') ?></td>
-            <td><?= $r['quantity'] ?></td>
-            <td><?= $r['unit_type'] ?></td>
-            <td><?= number_format($r['cost_price'], 2, '.', ' ') ?></td>
-            <?php if ($canSeeMargin): ?>
-            <td><?= $r['margin_percent'] ?? 0 ?>%</td>
-            <td><?= number_format($r['total_cost'], 2, '.', ' ') ?></td>
-            <td><?= number_format($r['profit'], 2, '.', ' ') ?></td>
-            <?php endif; ?>
-        </tr>
-        <?php endforeach; ?>
-        <tr class="total">
-            <td colspan="5"><strong>ИТОГО</strong></td>
-            <td><strong><?= number_format($totalCostPrice, 2, '.', ' ') ?></strong></td>
-            <?php if ($canSeeMargin): ?>
-            <td></td>
-            <td><strong><?= number_format($totalWithMargin, 2, '.', ' ') ?></strong></td>
-            <td><strong><?= number_format($totalProfit, 2, '.', ' ') ?></strong></td>
-            <?php endif; ?>
-        </tr>
-    </table>
 
-    <div class="result">
-        <h3>Финальные показатели</h3>
-        <p><strong>Себестоимость проекта:</strong> <?= number_format($totalCostPrice, 2, '.', ' ') ?> ₽</p>
-        <?php if ($canSeeMargin): ?>
-        <p><strong>Стоимость с маржинальностью:</strong> <?= number_format($totalWithMargin, 2, '.', ' ') ?> ₽</p>
-        <p><strong>Чистая прибыль:</strong> <?= number_format($totalProfit, 2, '.', ' ') ?> ₽</p>
-        <?php endif; ?>
-        <p><strong>ИТОГО ДЛЯ ЗАКАЗЧИКА (с налогом <?= $project['tax_rate'] ?>%):</strong> <?= number_format($projectTotal, 2, '.', ' ') ?> ₽</p>
+            <div class="result-box">
+                <h3>Финальные показатели</h3>
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:16px; margin-top:12px;">
+                    <div><strong>Себестоимость:</strong><br><?= number_format($totalCostPrice, 2) ?> ₽</div>
+                    <?php if ($canSeeMargin): ?>
+                        <div><strong>С маржинальностью:</strong><br><?= number_format($totalWithMargin, 2) ?> ₽</div>
+                        <div><strong>Чистая прибыль:</strong><br><?= number_format($totalProfit, 2) ?> ₽</div>
+                    <?php endif; ?>
+                    <div><strong style="color:var(--primary);">ИТОГО ДЛЯ ЗАКАЗЧИКА:</strong><br>
+                        <?= number_format($projectTotal, 2) ?> ₽ (налог <?= $project['tax_rate'] ?? 6 ?>%)
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </body>
 </html>

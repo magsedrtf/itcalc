@@ -13,19 +13,16 @@ if (!$workspace_id) {
     exit;
 }
 
-// Проверяем доступ к workspace
 $stmt = $db->prepare("SELECT * FROM workspace_users WHERE workspace_id = ? AND user_id = ?");
 $stmt->execute([$workspace_id, $user_id]);
 if (!$stmt->fetch()) {
     die("Нет доступа к этой рабочей области");
 }
 
-// Получаем информацию о workspace
 $stmt = $db->prepare("SELECT * FROM workspaces WHERE id = ?");
 $stmt->execute([$workspace_id]);
 $workspace = $stmt->fetch();
 
-// Получаем текущих участников
 $stmt = $db->prepare("
     SELECT wu.*, u.last_name, u.first_name, u.email 
     FROM workspace_users wu
@@ -36,7 +33,6 @@ $stmt = $db->prepare("
 $stmt->execute([$workspace_id]);
 $participants = $stmt->fetchAll();
 
-// Добавление участника
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_user'])) {
     $new_user_id = (int)$_POST['user_id'];
     $role = $_POST['role'];
@@ -48,7 +44,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_user'])) {
     exit;
 }
 
-// Удаление участника
 if (isset($_GET['delete'])) {
     $delete_id = (int)$_GET['delete'];
     $stmt = $db->prepare("DELETE FROM workspace_users WHERE id = ? AND workspace_id = ?");
@@ -62,61 +57,77 @@ if (isset($_GET['delete'])) {
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Участники: <?= htmlspecialchars($workspace['name']) ?></title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 30px; }
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid #ddd; padding: 10px; }
-        th { background: #4CAF50; color: white; }
-        .btn { padding: 8px 15px; color: white; text-decoration: none; border-radius: 4px; }
-        .btn-add { background: #4CAF50; }
-        .btn-delete { background: #f44336; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Участники рабочей области</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <a href="workspaces.php">← Все рабочие области</a>
-    <h1>👥 Участники рабочей области: <?= htmlspecialchars($workspace['name']) ?></h1>
+    <div class="container">
+        <a href="workspaces.php" class="back-link">← Все рабочие области</a>
 
-    <!-- Форма добавления -->
-    <h3>+ Добавить участника</h3>
-    <form method="POST">
-        <select name="user_id" required>
-            <option value="">— Выберите пользователя —</option>
-            <?php
-            $allUsers = $db->query("SELECT id, last_name, first_name FROM users ORDER BY last_name")->fetchAll();
-            foreach ($allUsers as $u):
-            ?>
-                <option value="<?= $u['id'] ?>"><?= htmlspecialchars($u['last_name'].' '.$u['first_name']) ?></option>
-            <?php endforeach; ?>
-        </select>
-        
-        <select name="role" required>
-            <option value="Просмотр">Просмотр</option>
-            <option value="Редактирование">Редактирование</option>
-        </select>
-        
-        <button type="submit" name="add_user" class="btn btn-add">Добавить</button>
-    </form>
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h1>👥 Участники</h1>
+                    <p class="page-subtitle">Рабочая область: <?= htmlspecialchars($workspace['name']) ?></p>
+                </div>
+            </div>
 
-    <br><br>
-    <table>
-        <tr>
-            <th>ФИО</th>
-            <th>Email</th>
-            <th>Права</th>
-            <th>Действия</th>
-        </tr>
-        <?php foreach ($participants as $p): ?>
-        <tr>
-            <td><?= htmlspecialchars($p['last_name'].' '.$p['first_name']) ?></td>
-            <td><?= htmlspecialchars($p['email']) ?></td>
-            <td><?= htmlspecialchars($p['role']) ?></td>
-            <td>
-                <a href="?workspace_id=<?= $workspace_id ?>&delete=<?= $p['id'] ?>" 
-                   class="btn btn-delete" onclick="return confirm('Удалить участника?')">Удалить</a>
-            </td>
-        </tr>
-        <?php endforeach; ?>
-    </table>
+            <div class="card" style="background:var(--gray-50);">
+                <h3>➕ Добавить участника</h3>
+                <form method="POST" style="display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end;">
+                    <div class="form-group" style="flex:1; min-width:180px; margin-bottom:0;">
+                        <label class="form-label">Пользователь</label>
+                        <select name="user_id" class="form-control" required>
+                            <option value="">— Выберите —</option>
+                            <?php
+                            $allUsers = $db->query("SELECT id, last_name, first_name FROM users ORDER BY last_name")->fetchAll();
+                            foreach ($allUsers as $u): ?>
+                                <option value="<?= $u['id'] ?>"><?= htmlspecialchars($u['last_name'].' '.$u['first_name']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" style="flex:1; min-width:140px; margin-bottom:0;">
+                        <label class="form-label">Права</label>
+                        <select name="role" class="form-control" required>
+                            <option value="Просмотр">Просмотр</option>
+                            <option value="Редактирование">Редактирование</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" name="add_user" class="btn btn-success" style="margin-bottom:2px;">➕ Добавить</button>
+                </form>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ФИО</th>
+                            <th>Email</th>
+                            <th>Права</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($participants as $p): ?>
+                        <tr>
+                            <td><strong><?= htmlspecialchars($p['last_name'].' '.$p['first_name']) ?></strong></td>
+                            <td><?= htmlspecialchars($p['email']) ?></td>
+                            <td>
+                                <span class="role-badge"><?= htmlspecialchars($p['role']) ?></span>
+                            </td>
+                            <td>
+                                <a href="?workspace_id=<?= $workspace_id ?>&delete=<?= $p['id'] ?>" 
+                                   class="btn btn-danger btn-sm" onclick="return confirm('Удалить участника?')">🗑️ Удалить</a>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

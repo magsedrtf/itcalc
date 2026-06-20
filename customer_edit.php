@@ -34,8 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $db->prepare("UPDATE customers SET type=?, inn=?, name=?, director_name=?, email=?, phone=?, workspace_id=? WHERE id=?");
         $stmt->execute([$type, $inn, $name, $director_name, $email, $phone, $workspace_id, $editId]);
     } else {
-        $stmt = $db->prepare("INSERT INTO customers (workspace_id, type, inn, name, director_name, email, phone) 
-                              VALUES (?,?,?,?,?,?,?)");
+        $stmt = $db->prepare("INSERT INTO customers (workspace_id, type, inn, name, director_name, email, phone) VALUES (?,?,?,?,?,?,?)");
         $stmt->execute([$workspace_id, $type, $inn, $name, $director_name, $email, $phone]);
     }
 
@@ -48,43 +47,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $editId ? 'Редактирование' : 'Добавление' ?> заказчика</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 30px; }
-        form { max-width: 600px; }
-        label { display: block; margin: 12px 0 5px; font-weight: bold; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
-        button { background: #4CAF50; color: white; padding: 12px 25px; border: none; border-radius: 4px; cursor: pointer; }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <a href="customers.php?workspace_id=<?= $workspace_id ?>">← К списку заказчиков</a>
-    <h1><?= $editId ? 'Редактирование' : 'Добавление' ?> заказчика</h1>
-    
-    <form method="POST">
-        <label>Тип заказчика *</label>
-        <select name="customer_type" required>
-            <option value="Физическое лицо" <?= ($customer['type']??'')=='Физическое лицо'?'selected':'' ?>>Физическое лицо</option>
-            <option value="Индивидуальный предприниматель" <?= ($customer['type']??'')=='Индивидуальный предприниматель'?'selected':'' ?>>ИП</option>
-            <option value="Юридическое лицо" <?= ($customer['type']??'')=='Юридическое лицо'?'selected':'' ?>>Юридическое лицо</option>
-        </select>
+    <div class="container">
+        <a href="customers.php?workspace_id=<?= $workspace_id ?>" class="back-link">← К списку заказчиков</a>
 
-        <label>ИНН</label>
-        <input type="text" name="inn" value="<?= htmlspecialchars($customer['inn'] ?? '') ?>">
+        <div class="card max-w-md mx-auto">
+            <div class="card-header">
+                <h1><?= $editId ? '✏️ Редактирование' : '➕ Добавление' ?> заказчика</h1>
+            </div>
+            
+            <form method="POST">
+                <div class="form-group">
+                    <label class="form-label">Тип заказчика <span class="required">*</span></label>
+                    <select name="customer_type" class="form-control" required>
+                        <option value="Физическое лицо" <?= ($customer['type']??'')=='Физическое лицо'?'selected':'' ?>>Физическое лицо</option>
+                        <option value="Индивидуальный предприниматель" <?= ($customer['type']??'')=='Индивидуальный предприниматель'?'selected':'' ?>>ИП</option>
+                        <option value="Юридическое лицо" <?= ($customer['type']??'')=='Юридическое лицо'?'selected':'' ?>>Юридическое лицо</option>
+                    </select>
+                </div>
 
-        <label>Название (для ИП/ЮЛ)</label>
-        <input type="text" name="name" value="<?= htmlspecialchars($customer['name'] ?? '') ?>">
+                <div class="form-group">
+                    <label class="form-label">ИНН</label>
+                    <input type="text" name="inn" class="form-control" value="<?= htmlspecialchars($customer['inn'] ?? '') ?>">
+                </div>
 
-        <label>ФИО руководителя / Заказчика *</label>
-        <input type="text" name="director_name" value="<?= htmlspecialchars($customer['director_name'] ?? '') ?>" required>
+                <div class="form-group">
+                    <label class="form-label">Название (для ИП/ЮЛ)</label>
+                    <input type="text" name="name" class="form-control" value="<?= htmlspecialchars($customer['name'] ?? '') ?>">
+                </div>
 
-        <label>Email *</label>
-        <input type="email" name="email" value="<?= htmlspecialchars($customer['email'] ?? '') ?>" required>
+                <div class="form-group">
+                    <label class="form-label">ФИО руководителя / Заказчика <span class="required">*</span></label>
+                    <input type="text" name="director_name" class="form-control" value="<?= htmlspecialchars($customer['director_name'] ?? '') ?>" required>
+                </div>
 
-        <label>Телефон *</label>
-        <input type="text" name="phone" value="<?= htmlspecialchars($customer['phone'] ?? '') ?>" required>
+                <div class="form-group">
+                    <label class="form-label">Email <span class="required">*</span></label>
+                    <input type="email" name="email" class="form-control" value="<?= htmlspecialchars($customer['email'] ?? '') ?>" required>
+                </div>
 
-        <button type="submit">Сохранить</button>
-    </form>
+                <div class="form-group">
+                    <label class="form-label">Телефон <span class="required">*</span></label>
+                    <input type="text" name="phone" class="form-control" value="<?= htmlspecialchars($customer['phone'] ?? '') ?>" required>
+                </div>
+
+                <button type="submit" class="btn btn-success">💾 Сохранить</button>
+            </form>
+        </div>
+    </div>
 </body>
 </html>

@@ -34,46 +34,64 @@ if (isset($_GET['delete'])) {
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Реестр Оборудования</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 30px; }
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background: #4CAF50; color: white; }
-        .btn { padding: 6px 12px; color: white; text-decoration: none; border-radius: 4px; }
-        .btn-add { background: #4CAF50; }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <a href="projects.php?workspace_id=<?= $workspace_id ?>">← К проектам</a>
-    <h1>Реестр Оборудования</h1>
-    
-    <?php if (hasPermission('manage_employees')): ?>   <!-- можно потом сделать отдельное право -->
-    <a href="equipment_edit.php?workspace_id=<?= $workspace_id ?>" class="btn btn-add">+ Добавить оборудование</a>
-    <?php endif; ?>
-    
-    <table>
-        <tr>
-            <th>ID</th>
-            <th>Название</th>
-            <th>Тип приобретения</th>
-            <th>Ед.изм</th>
-            <th>Стоимость за ед.</th>
-            <th>Действия</th>
-        </tr>
-        <?php foreach ($equipment as $e): ?>
-        <tr>
-            <td><?= $e['id'] ?></td>
-            <td><?= htmlspecialchars($e['name']) ?></td>
-            <td><?= htmlspecialchars($e['acquisition_type']) ?></td>
-            <td><?= htmlspecialchars($e['unit_type']) ?></td>
-            <td><?= number_format($e['unit_cost'], 2) ?></td>
-            <td>
-                <a href="equipment_edit.php?id=<?= $e['id'] ?>&workspace_id=<?= $workspace_id ?>" class="btn" style="background:#2196F3">Ред.</a>
-                <a href="?delete=<?= $e['id'] ?>&workspace_id=<?= $workspace_id ?>" class="btn" style="background:#f44336" onclick="return confirm('Удалить?')">Уд.</a>
-            </td>
-        </tr>
-        <?php endforeach; ?>
-    </table>
+    <div class="container">
+        <a href="projects.php?workspace_id=<?= $workspace_id ?>" class="back-link">← К проектам</a>
+
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h1>🖥️ Реестр Оборудования</h1>
+                    <p class="page-subtitle">Техника и оборудование</p>
+                </div>
+                <?php if (hasPermission('manage_employees')): ?>
+                    <a href="equipment_edit.php?workspace_id=<?= $workspace_id ?>" class="btn btn-success">+ Добавить оборудование</a>
+                <?php endif; ?>
+            </div>
+
+            <?php if (empty($equipment)): ?>
+                <div class="text-center" style="padding:30px 0; color:var(--gray-500);">
+                    <p>Пока нет оборудования</p>
+                </div>
+            <?php else: ?>
+                <div class="table-wrapper">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Название</th>
+                                <th>Тип приобретения</th>
+                                <th>Ед.изм</th>
+                                <th>Стоимость за ед.</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($equipment as $e): ?>
+                            <tr>
+                                <td><?= $e['id'] ?></td>
+                                <td><strong><?= htmlspecialchars($e['name']) ?></strong></td>
+                                <td><?= htmlspecialchars($e['acquisition_type']) ?></td>
+                                <td><?= htmlspecialchars($e['unit_type']) ?></td>
+                                <td><?= number_format($e['unit_cost'], 2) ?></td>
+                                <td>
+                                    <div class="actions">
+                                        <a href="equipment_edit.php?id=<?= $e['id'] ?>&workspace_id=<?= $workspace_id ?>" class="btn btn-info btn-sm">✏️ Ред.</a>
+                                        <a href="?delete=<?= $e['id'] ?>&workspace_id=<?= $workspace_id ?>" class="btn btn-danger btn-sm" 
+                                           onclick="return confirm('Удалить?')">🗑️ Уд.</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
 </body>
 </html>

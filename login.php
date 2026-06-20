@@ -25,44 +25,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Вход в систему</title>
+    <link rel="stylesheet" href="style.css">
     <style>
-        body { font-family: Arial, sans-serif; margin: 50px; background: #f5f5f5; }
-        .login-form { max-width: 420px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 0 15px rgba(0,0,0,0.1); }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: #4CAF50; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
-        button:hover { background: #45a049; }
-        .error { color: red; text-align: center; margin: 10px 0; }
-        .links { text-align: center; margin-top: 20px; }
-        .links a { color: #2196F3; text-decoration: none; }
+        .login-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%);
+        }
+        .login-card {
+            max-width: 420px;
+            width: 100%;
+        }
+        .login-card h1 { text-align: center; }
+        .login-card .subtitle { text-align: center; color: var(--gray-500); margin-bottom: 24px; }
+        .test-credentials {
+            text-align: center;
+            font-size: 13px;
+            color: var(--gray-500);
+            margin-top: 20px;
+            padding: 12px;
+            background: var(--gray-50);
+            border-radius: var(--radius);
+        }
+        .test-credentials strong { color: var(--gray-700); }
     </style>
 </head>
 <body>
-    <div class="login-form">
-        <h1 style="text-align:center;">Вход в систему</h1>
-        
-        <?php if ($error): ?>
-            <div class="error"><?= htmlspecialchars($error) ?></div>
-        <?php endif; ?>
+    <div class="login-wrapper">
+        <div class="card login-card">
+            <h1>🚀 Вход</h1>
+            <p class="subtitle">Войдите в свою учётную запись</p>
+            
+            <?php if ($error): ?>
+                <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
+            <?php endif; ?>
 
-        <form method="POST">
-            <label><strong>Email</strong></label>
-            <input type="text" name="email" required autofocus>
+            <form method="POST">
+                <div class="form-group">
+                    <label class="form-label">Email <span class="required">*</span></label>
+                    <input type="email" name="email" class="form-control" placeholder="example@mail.ru" required autofocus>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Пароль <span class="required">*</span></label>
+                    <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary w-100" style="justify-content:center; padding:12px; font-size:16px;">
+                    Войти
+                </button>
+            </form>
             
-            <label><strong>Пароль</strong></label>
-            <input type="password" name="password" required>
+            <div class="test-credentials">
+                <strong>Тестовые данные:</strong><br>
+                admin@test.ru / 123456
+            </div>
             
-            <button type="submit">Войти</button>
-        </form>
-        
-        <div class="links">
-            <p><a href="register.php">→ Зарегистрировать новую компанию</a></p>
+            <p style="text-align:center; margin-top:16px;">
+                <a href="register.php" style="color:var(--primary); text-decoration:none;">→ Зарегистрировать новую компанию</a>
+            </p>
         </div>
-        
-        <p style="text-align:center; margin-top:20px; color:#666; font-size:14px;">
-            Тестовые данные:<br>
-            <strong>admin@test.ru</strong> / 123456
-        </p>
     </div>
 </body>
 </html>

@@ -35,8 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $db->prepare("UPDATE subcontractors SET type=?, inn=?, name=?, last_name=?, first_name=?, email=?, phone=?, workspace_id=? WHERE id=?");
         $stmt->execute([$type, $inn, $name, $last_name, $first_name, $email, $phone, $workspace_id, $editId]);
     } else {
-        $stmt = $db->prepare("INSERT INTO subcontractors (workspace_id, type, inn, name, last_name, first_name, email, phone) 
-                              VALUES (?,?,?,?,?,?,?,?)");
+        $stmt = $db->prepare("INSERT INTO subcontractors (workspace_id, type, inn, name, last_name, first_name, email, phone) VALUES (?,?,?,?,?,?,?,?)");
         $stmt->execute([$workspace_id, $type, $inn, $name, $last_name, $first_name, $email, $phone]);
     }
 
@@ -49,45 +48,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $editId ? 'Редактирование' : 'Добавление' ?> субподрядчика</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 30px; }
-        form { max-width: 600px; }
-        label { display: block; margin: 12px 0 5px; font-weight: bold; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
-        button { background: #4CAF50; color: white; padding: 12px 25px; border: none; border-radius: 4px; cursor: pointer; }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <a href="subcontractors.php?workspace_id=<?= $workspace_id ?>">← К списку субподрядчиков</a>
-    <h1><?= $editId ? '✏️ Редактирование' : '➕ Добавление' ?> субподрядчика</h1>
-    
-    <form method="POST">
-        <label>Тип *</label>
-        <select name="type" required>
-            <option value="Индивидуальный предприниматель" <?= ($sub['type']??'')=='Индивидуальный предприниматель'?'selected':'' ?>>ИП</option>
-            <option value="Юридическое лицо" <?= ($sub['type']??'')=='Юридическое лицо'?'selected':'' ?>>Юридическое лицо</option>
-        </select>
+    <div class="container">
+        <a href="subcontractors.php?workspace_id=<?= $workspace_id ?>" class="back-link">← К списку субподрядчиков</a>
 
-        <label>ИНН</label>
-        <input type="text" name="inn" value="<?= htmlspecialchars($sub['inn'] ?? '') ?>">
+        <div class="card max-w-md mx-auto">
+            <div class="card-header">
+                <h1><?= $editId ? '✏️ Редактирование' : '➕ Добавление' ?> субподрядчика</h1>
+            </div>
+            
+            <form method="POST">
+                <div class="form-group">
+                    <label class="form-label">Тип <span class="required">*</span></label>
+                    <select name="type" class="form-control" required>
+                        <option value="Индивидуальный предприниматель" <?= ($sub['type']??'')=='Индивидуальный предприниматель'?'selected':'' ?>>ИП</option>
+                        <option value="Юридическое лицо" <?= ($sub['type']??'')=='Юридическое лицо'?'selected':'' ?>>Юридическое лицо</option>
+                    </select>
+                </div>
 
-        <label>Название организации</label>
-        <input type="text" name="name" value="<?= htmlspecialchars($sub['name'] ?? '') ?>">
+                <div class="form-group">
+                    <label class="form-label">ИНН</label>
+                    <input type="text" name="inn" class="form-control" value="<?= htmlspecialchars($sub['inn'] ?? '') ?>">
+                </div>
 
-        <label>Фамилия руководителя</label>
-        <input type="text" name="last_name" value="<?= htmlspecialchars($sub['last_name'] ?? '') ?>">
+                <div class="form-group">
+                    <label class="form-label">Название организации</label>
+                    <input type="text" name="name" class="form-control" value="<?= htmlspecialchars($sub['name'] ?? '') ?>">
+                </div>
 
-        <label>Имя руководителя</label>
-        <input type="text" name="first_name" value="<?= htmlspecialchars($sub['first_name'] ?? '') ?>">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Фамилия руководителя</label>
+                        <input type="text" name="last_name" class="form-control" value="<?= htmlspecialchars($sub['last_name'] ?? '') ?>">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Имя руководителя</label>
+                        <input type="text" name="first_name" class="form-control" value="<?= htmlspecialchars($sub['first_name'] ?? '') ?>">
+                    </div>
+                </div>
 
-        <label>Email *</label>
-        <input type="email" name="email" value="<?= htmlspecialchars($sub['email'] ?? '') ?>" required>
+                <div class="form-group">
+                    <label class="form-label">Email <span class="required">*</span></label>
+                    <input type="email" name="email" class="form-control" value="<?= htmlspecialchars($sub['email'] ?? '') ?>" required>
+                </div>
 
-        <label>Телефон</label>
-        <input type="text" name="phone" value="<?= htmlspecialchars($sub['phone'] ?? '') ?>">
+                <div class="form-group">
+                    <label class="form-label">Телефон</label>
+                    <input type="text" name="phone" class="form-control" value="<?= htmlspecialchars($sub['phone'] ?? '') ?>">
+                </div>
 
-        <button type="submit">💾 Сохранить</button>
-    </form>
+                <button type="submit" class="btn btn-success">💾 Сохранить</button>
+            </form>
+        </div>
+    </div>
 </body>
 </html>

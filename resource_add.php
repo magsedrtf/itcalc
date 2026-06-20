@@ -19,7 +19,6 @@ if (!canManageResources()) {
     die("У вас нет прав на управление ресурсами проекта.");
 }
 
-
 $stmt = $db->prepare("SELECT * FROM projects WHERE id = ?");
 $stmt->execute([$project_id]);
 $project = $stmt->fetch();
@@ -28,29 +27,23 @@ if (!$project) die("Проект не найден");
 
 $workspace_id = $project['workspace_id'];
 
-
 if (!hasWorkspaceAccess($workspace_id)) {
     die("Нет доступа к этому проекту");
 }
 
-
-$employees = $db->prepare("SELECT id, last_name, first_name, position, salary, tax_rate 
-                           FROM employees WHERE workspace_id = ? ORDER BY last_name");
+$employees = $db->prepare("SELECT id, last_name, first_name, position, salary, tax_rate FROM employees WHERE workspace_id = ? ORDER BY last_name");
 $employees->execute([$workspace_id]);
 $employees = $employees->fetchAll();
 
-$executors = $db->prepare("SELECT id, last_name, first_name, contract_type, tax_rate, unit_type, unit_cost 
-                           FROM executors WHERE workspace_id = ? ORDER BY last_name");
+$executors = $db->prepare("SELECT id, last_name, first_name, contract_type, tax_rate, unit_type, unit_cost FROM executors WHERE workspace_id = ? ORDER BY last_name");
 $executors->execute([$workspace_id]);
 $executors = $executors->fetchAll();
 
-$equipment_list = $db->prepare("SELECT id, name, unit_type, unit_cost 
-                                FROM equipment WHERE workspace_id = ? ORDER BY name");
+$equipment_list = $db->prepare("SELECT id, name, unit_type, unit_cost FROM equipment WHERE workspace_id = ? ORDER BY name");
 $equipment_list->execute([$workspace_id]);
 $equipment_list = $equipment_list->fetchAll();
 
-$subcontractors = $db->prepare("SELECT id, name, last_name, first_name 
-                                FROM subcontractors WHERE workspace_id = ? ORDER BY name, last_name");
+$subcontractors = $db->prepare("SELECT id, name, last_name, first_name FROM subcontractors WHERE workspace_id = ? ORDER BY name, last_name");
 $subcontractors->execute([$workspace_id]);
 $subcontractors = $subcontractors->fetchAll();
 
@@ -66,13 +59,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $unit_cost = (float)$_POST['unit_cost'];
     $margin_percent = (float)$_POST['margin_percent'];
 
-    $stmt = $db->prepare("INSERT INTO project_resources 
-        (project_id, resource_type, resource_id, resource_name, service_name, 
-         start_date, end_date, quantity, unit_type, unit_cost, margin_percent) 
-        VALUES (?,?,?,?,?,?,?,?,?,?,?)");
-    
-    $stmt->execute([$project_id, $resource_type, $resource_id, $resource_name, $service_name, 
-                    $start_date, $end_date, $quantity, $unit_type, $unit_cost, $margin_percent]);
+    $stmt = $db->prepare("INSERT INTO project_resources (project_id, resource_type, resource_id, resource_name, service_name, start_date, end_date, quantity, unit_type, unit_cost, margin_percent) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
+    $stmt->execute([$project_id, $resource_type, $resource_id, $resource_name, $service_name, $start_date, $end_date, $quantity, $unit_type, $unit_cost, $margin_percent]);
 
     header("Location: project_manage.php?id=$project_id");
     exit;
@@ -83,63 +71,88 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Добавление ресурса</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 30px; }
-        form { max-width: 800px; }
-        label { display: block; margin: 12px 0 5px; font-weight: bold; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
-        button { background: #4CAF50; color: white; padding: 12px 25px; border: none; border-radius: 4px; cursor: pointer; }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <a href="project_manage.php?id=<?= $project_id ?>">← Назад к проекту</a>
-    <h1>Добавление ресурса в проект</h1>
+    <div class="container">
+        <a href="project_manage.php?id=<?= $project_id ?>" class="back-link">← Назад к проекту</a>
 
-    <form method="POST">
-        <label>Тип ресурса *</label>
-        <select name="resource_type" id="resource_type" required onchange="loadResources(this.value)">
-            <option value="Сотрудник">Сотрудник</option>
-            <option value="Исполнитель">Исполнитель (ФЛ)</option>
-            <option value="Субподрядчик">Субподрядчик</option>
-            <option value="Оборудование">Оборудование</option>
-        </select>
+        <div class="card max-w-lg mx-auto">
+            <div class="card-header">
+                <h1>➕ Добавление ресурса</h1>
+            </div>
+            
+            <form method="POST">
+                <div class="form-group">
+                    <label class="form-label">Тип ресурса <span class="required">*</span></label>
+                    <select name="resource_type" id="resource_type" class="form-control" required onchange="loadResources(this.value)">
+                        <option value="Сотрудник">Сотрудник</option>
+                        <option value="Исполнитель">Исполнитель (ФЛ)</option>
+                        <option value="Субподрядчик">Субподрядчик</option>
+                        <option value="Оборудование">Оборудование</option>
+                    </select>
+                </div>
 
-        <label>Выбор из реестра</label>
-        <select name="resource_id" id="resource_select" onchange="fillResourceData()">
-            <option value="">— Выбрать из реестра —</option>
-        </select>
+                <div class="form-group">
+                    <label class="form-label">Выбор из реестра</label>
+                    <select name="resource_id" id="resource_select" class="form-control" onchange="fillResourceData()">
+                        <option value="">— Выбрать из реестра —</option>
+                    </select>
+                </div>
 
-        <label>Название ресурса в документах *</label>
-        <input type="text" name="resource_name" id="resource_name" required>
+                <div class="form-group">
+                    <label class="form-label">Название ресурса <span class="required">*</span></label>
+                    <input type="text" name="resource_name" id="resource_name" class="form-control" required>
+                </div>
 
-        <label>Название услуги *</label>
-        <input type="text" name="service_name" required>
+                <div class="form-group">
+                    <label class="form-label">Название услуги <span class="required">*</span></label>
+                    <input type="text" name="service_name" class="form-control" required>
+                </div>
 
-        <label>Дата начала *</label>
-        <input type="date" name="start_date" value="<?= $project['start_date'] ?>" required>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Дата начала <span class="required">*</span></label>
+                        <input type="date" name="start_date" class="form-control" value="<?= $project['start_date'] ?>" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Дата окончания <span class="required">*</span></label>
+                        <input type="date" name="end_date" class="form-control" value="<?= $project['end_date'] ?>" required>
+                    </div>
+                </div>
 
-        <label>Дата окончания *</label>
-        <input type="date" name="end_date" value="<?= $project['end_date'] ?>" required>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Количество <span class="required">*</span></label>
+                        <input type="number" name="quantity" step="0.01" class="form-control" value="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Единица измерения <span class="required">*</span></label>
+                        <select name="unit_type" id="unit_type" class="form-control" required>
+                            <option value="часы">Часы</option>
+                            <option value="дни">Дни</option>
+                            <option value="полная стоимость">Полная стоимость</option>
+                        </select>
+                    </div>
+                </div>
 
-        <label>Количество *</label>
-        <input type="number" name="quantity" step="0.01" value="1" required>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Стоимость за ед. (₽) <span class="required">*</span></label>
+                        <input type="number" name="unit_cost" id="unit_cost" step="0.01" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Маржинальность (%)</label>
+                        <input type="number" name="margin_percent" step="0.1" class="form-control" value="30">
+                    </div>
+                </div>
 
-        <label>Единица измерения *</label>
-        <select name="unit_type" id="unit_type" required>
-            <option value="часы">Часы</option>
-            <option value="дни">Дни</option>
-            <option value="полная стоимость">Полная стоимость</option>
-        </select>
-
-        <label>Стоимость за единицу (₽) *</label>
-        <input type="number" name="unit_cost" id="unit_cost" step="0.01" required>
-
-        <label>Маржинальность (%)</label>
-        <input type="number" name="margin_percent" value="30" step="0.1">
-
-        <button type="submit">Добавить в проект</button>
-    </form>
+                <button type="submit" class="btn btn-success">➕ Добавить в проект</button>
+            </form>
+        </div>
+    </div>
 
     <script>
     function loadResources(type) {
@@ -203,7 +216,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!option || !option.dataset.name) return;
 
         document.getElementById('resource_name').value = option.dataset.name;
-
         if (option.dataset.unit) document.getElementById('unit_type').value = option.dataset.unit;
         if (option.dataset.cost) document.getElementById('unit_cost').value = option.dataset.cost;
     }

@@ -12,7 +12,6 @@ $id = (int)$_GET['id'];
 $stmt = $db->prepare("DELETE FROM projects WHERE id = ?");
 $stmt->execute([$id]);
 
-
 $stmt = $db->prepare("DELETE FROM project_resources WHERE project_id = ?");
 $stmt->execute([$id]);
 

@@ -29,7 +29,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute([$name, $subdomain, $admin_user_id]);
         $newWorkspaceId = $db->lastInsertId();
 
-        // Добавляем создателя как администратора
         $stmt = $db->prepare("INSERT INTO workspace_users (workspace_id, user_id, role) VALUES (?,?, 'Редактирование')");
         $stmt->execute([$newWorkspaceId, $user_id]);
     }
@@ -38,7 +37,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
-// Получаем список пользователей для выбора администратора
 $users = $db->query("SELECT id, last_name, first_name FROM users ORDER BY last_name")->fetchAll();
 ?>
 
@@ -46,37 +44,45 @@ $users = $db->query("SELECT id, last_name, first_name FROM users ORDER BY last_n
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $editId ? 'Редактирование' : 'Создание' ?> рабочей области</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 30px; }
-        form { max-width: 600px; }
-        label { display: block; margin: 15px 0 5px; font-weight: bold; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
-        button { background: #4CAF50; color: white; padding: 12px 25px; border: none; border-radius: 4px; cursor: pointer; }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <a href="workspaces.php">← К списку рабочих областей</a>
-    <h1><?= $editId ? '✏️ Редактирование' : '➕ Создание' ?> рабочей области</h1>
-    
-    <form method="POST">
-        <label>Название рабочей области *</label>
-        <input type="text" name="name" value="<?= htmlspecialchars($workspace['name'] ?? '') ?>" required>
-        
-        <label>Поддомен (например: myteam)</label>
-        <input type="text" name="subdomain" value="<?= htmlspecialchars($workspace['subdomain'] ?? '') ?>" placeholder="myteam">
-        
-        <label>Администратор рабочей области *</label>
-        <select name="admin_user_id" required>
-            <option value="">— Выберите администратора —</option>
-            <?php foreach ($users as $u): ?>
-                <option value="<?= $u['id'] ?>" <?= ($workspace['admin_user_id'] ?? 0) == $u['id'] ? 'selected' : '' ?>>
-                    <?= htmlspecialchars($u['last_name'] . ' ' . $u['first_name']) ?>
-                </option>
-            <?php endforeach; ?>
-        </select>
-        
-        <button type="submit">💾 Сохранить рабочую область</button>
-    </form>
+    <div class="container">
+        <a href="workspaces.php" class="back-link">← К списку рабочих областей</a>
+
+        <div class="card max-w-md mx-auto">
+            <div class="card-header">
+                <h1><?= $editId ? '✏️ Редактирование' : '➕ Создание' ?> рабочей области</h1>
+            </div>
+            
+            <form method="POST">
+                <div class="form-group">
+                    <label class="form-label">Название рабочей области <span class="required">*</span></label>
+                    <input type="text" name="name" class="form-control" value="<?= htmlspecialchars($workspace['name'] ?? '') ?>" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Поддомен (например: myteam)</label>
+                    <input type="text" name="subdomain" class="form-control" value="<?= htmlspecialchars($workspace['subdomain'] ?? '') ?>" placeholder="myteam">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Администратор рабочей области <span class="required">*</span></label>
+                    <select name="admin_user_id" class="form-control" required>
+                        <option value="">— Выберите администратора —</option>
+                        <?php foreach ($users as $u): ?>
+                            <option value="<?= $u['id'] ?>" <?= ($workspace['admin_user_id'] ?? 0) == $u['id'] ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($u['last_name'] . ' ' . $u['first_name']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                
+                <button type="submit" class="btn btn-success">💾 Сохранить рабочую область</button>
+            </form>
+        </div>
+    </div>
 </body>
 </html>

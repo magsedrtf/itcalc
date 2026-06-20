@@ -16,7 +16,6 @@ $project = $stmt->fetch();
 if ($project) {
     $stmt = $db->prepare("DELETE FROM project_resources WHERE id = ?");
     $stmt->execute([$id]);
-    
     header("Location: project_manage.php?id=" . $project['project_id']);
 } else {
     header('Location: projects.php');

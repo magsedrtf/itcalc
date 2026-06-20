@@ -33,8 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $db->prepare("UPDATE equipment SET name=?, description=?, acquisition_type=?, unit_type=?, unit_cost=?, workspace_id=? WHERE id=?");
         $stmt->execute([$name, $description, $acquisition_type, $unit_type, $unit_cost, $workspace_id, $editId]);
     } else {
-        $stmt = $db->prepare("INSERT INTO equipment (name, description, acquisition_type, unit_type, unit_cost, workspace_id) 
-                              VALUES (?,?,?,?,?,?)");
+        $stmt = $db->prepare("INSERT INTO equipment (name, description, acquisition_type, unit_type, unit_cost, workspace_id) VALUES (?,?,?,?,?,?)");
         $stmt->execute([$name, $description, $acquisition_type, $unit_type, $unit_cost, $workspace_id]);
     }
 
@@ -47,43 +46,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $editId ? 'Редактирование' : 'Добавление' ?> оборудования</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 30px; }
-        form { max-width: 600px; }
-        label { display: block; margin: 12px 0 5px; font-weight: bold; }
-        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
-        button { background: #4CAF50; color: white; padding: 12px 25px; border: none; border-radius: 4px; cursor: pointer; }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <a href="equipment.php?workspace_id=<?= $workspace_id ?>">← К списку оборудования</a>
-    <h1><?= $editId ? 'Редактирование' : 'Добавление' ?> оборудования</h1>
-    
-    <form method="POST">
-        <label>Название оборудования *</label>
-        <input type="text" name="name" value="<?= htmlspecialchars($eq['name'] ?? '') ?>" required>
+    <div class="container">
+        <a href="equipment.php?workspace_id=<?= $workspace_id ?>" class="back-link">← К списку оборудования</a>
 
-        <label>Описание</label>
-        <textarea name="description" rows="3"><?= htmlspecialchars($eq['description'] ?? '') ?></textarea>
+        <div class="card max-w-md mx-auto">
+            <div class="card-header">
+                <h1><?= $editId ? '✏️ Редактирование' : '➕ Добавление' ?> оборудования</h1>
+            </div>
+            
+            <form method="POST">
+                <div class="form-group">
+                    <label class="form-label">Название оборудования <span class="required">*</span></label>
+                    <input type="text" name="name" class="form-control" value="<?= htmlspecialchars($eq['name'] ?? '') ?>" required>
+                </div>
 
-        <label>Тип приобретения *</label>
-        <select name="acquisition_type" required>
-            <option value="Собственное" <?= ($eq['acquisition_type']??'')=='Собственное'?'selected':'' ?>>Собственное</option>
-            <option value="В аренде" <?= ($eq['acquisition_type']??'')=='В аренде'?'selected':'' ?>>В аренде</option>
-        </select>
+                <div class="form-group">
+                    <label class="form-label">Описание</label>
+                    <textarea name="description" class="form-control" rows="3"><?= htmlspecialchars($eq['description'] ?? '') ?></textarea>
+                </div>
 
-        <label>Единица измерения *</label>
-        <select name="unit_type" required>
-            <option value="часы">Часы</option>
-            <option value="дни">Дни</option>
-            <option value="полная стоимость">Полная стоимость</option>
-        </select>
+                <div class="form-group">
+                    <label class="form-label">Тип приобретения <span class="required">*</span></label>
+                    <select name="acquisition_type" class="form-control" required>
+                        <option value="Собственное" <?= ($eq['acquisition_type']??'')=='Собственное'?'selected':'' ?>>Собственное</option>
+                        <option value="В аренде" <?= ($eq['acquisition_type']??'')=='В аренде'?'selected':'' ?>>В аренде</option>
+                    </select>
+                </div>
 
-        <label>Стоимость за единицу, ₽ *</label>
-        <input type="number" step="0.01" name="unit_cost" value="<?= $eq['unit_cost'] ?? '' ?>" required>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Единица измерения <span class="required">*</span></label>
+                        <select name="unit_type" class="form-control" required>
+                            <option value="часы" <?= ($eq['unit_type']??'')=='часы'?'selected':'' ?>>Часы</option>
+                            <option value="дни" <?= ($eq['unit_type']??'')=='дни'?'selected':'' ?>>Дни</option>
+                            <option value="полная стоимость" <?= ($eq['unit_type']??'')=='полная стоимость'?'selected':'' ?>>Полная стоимость</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Стоимость за ед., ₽ <span class="required">*</span></label>
+                        <input type="number" step="0.01" name="unit_cost" class="form-control" value="<?= $eq['unit_cost'] ?? '' ?>" required>
+                    </div>
+                </div>
 
-        <button type="submit">Сохранить</button>
-    </form>
+                <button type="submit" class="btn btn-success">💾 Сохранить</button>
+            </form>
+        </div>
+    </div>
 </body>
 </html>

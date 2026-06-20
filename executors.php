@@ -34,48 +34,66 @@ if (isset($_GET['delete'])) {
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Реестр Исполнителей</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 30px; }
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background: #4CAF50; color: white; }
-        .btn { padding: 6px 12px; color: white; text-decoration: none; border-radius: 4px; }
-        .btn-add { background: #4CAF50; }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <a href="projects.php?workspace_id=<?= $workspace_id ?>">← К проектам</a>
-    <h1>Реестр Исполнителей (ФЛ)</h1>
-    
-    <?php if (hasPermission('manage_employees')): ?>
-    <a href="executor_edit.php?workspace_id=<?= $workspace_id ?>" class="btn btn-add">+ Добавить исполнителя</a>
-    <?php endif; ?>
-    
-    <table>
-        <tr>
-            <th>ID</th>
-            <th>ФИО</th>
-            <th>Тип оформления</th>
-            <th>Ставка налога</th>
-            <th>Ед.изм</th>
-            <th>Стоимость за ед.</th>
-            <th>Действия</th>
-        </tr>
-        <?php foreach ($executors as $e): ?>
-        <tr>
-            <td><?= $e['id'] ?></td>
-            <td><?= htmlspecialchars($e['last_name'] . ' ' . $e['first_name']) ?></td>
-            <td><?= htmlspecialchars($e['contract_type']) ?></td>
-            <td><?= $e['tax_rate'] ?>%</td>
-            <td><?= htmlspecialchars($e['unit_type']) ?></td>
-            <td><?= number_format($e['unit_cost'], 2) ?></td>
-            <td>
-                <a href="executor_edit.php?id=<?= $e['id'] ?>&workspace_id=<?= $workspace_id ?>" class="btn" style="background:#2196F3">Ред.</a>
-                <a href="?delete=<?= $e['id'] ?>&workspace_id=<?= $workspace_id ?>" class="btn" style="background:#f44336" onclick="return confirm('Удалить?')">Уд.</a>
-            </td>
-        </tr>
-        <?php endforeach; ?>
-    </table>
+    <div class="container">
+        <a href="projects.php?workspace_id=<?= $workspace_id ?>" class="back-link">← К проектам</a>
+
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h1>👤 Реестр Исполнителей</h1>
+                    <p class="page-subtitle">Физические лица — исполнители</p>
+                </div>
+                <?php if (hasPermission('manage_employees')): ?>
+                    <a href="executor_edit.php?workspace_id=<?= $workspace_id ?>" class="btn btn-success">+ Добавить исполнителя</a>
+                <?php endif; ?>
+            </div>
+
+            <?php if (empty($executors)): ?>
+                <div class="text-center" style="padding:30px 0; color:var(--gray-500);">
+                    <p>Пока нет исполнителей</p>
+                </div>
+            <?php else: ?>
+                <div class="table-wrapper">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>ФИО</th>
+                                <th>Тип оформления</th>
+                                <th>Ставка налога</th>
+                                <th>Ед.изм</th>
+                                <th>Стоимость за ед.</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($executors as $e): ?>
+                            <tr>
+                                <td><?= $e['id'] ?></td>
+                                <td><strong><?= htmlspecialchars($e['last_name'] . ' ' . $e['first_name']) ?></strong></td>
+                                <td><?= htmlspecialchars($e['contract_type']) ?></td>
+                                <td><?= $e['tax_rate'] ?>%</td>
+                                <td><?= htmlspecialchars($e['unit_type']) ?></td>
+                                <td><?= number_format($e['unit_cost'], 2) ?></td>
+                                <td>
+                                    <div class="actions">
+                                        <a href="executor_edit.php?id=<?= $e['id'] ?>&workspace_id=<?= $workspace_id ?>" class="btn btn-info btn-sm">✏️ Ред.</a>
+                                        <a href="?delete=<?= $e['id'] ?>&workspace_id=<?= $workspace_id ?>" class="btn btn-danger btn-sm" 
+                                           onclick="return confirm('Удалить?')">🗑️ Уд.</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
 </body>
 </html>

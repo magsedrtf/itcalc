@@ -38,7 +38,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $customer_id = !empty($_POST['customer_id']) ? (int)$_POST['customer_id'] : null;
 
     if ($editId) {
-        // Исправленный UPDATE без updated_at
         $stmt = $db->prepare("UPDATE projects SET 
             name=?, start_date=?, end_date=?, description=?, 
             technical_task=?, tax_rate=?, status=?, customer_id=? 
@@ -74,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </style>
 </head>
 <body>
-    <a href="projects.php">← К списку проектов</a>
+    <a href="projects.php?workspace_id=<?= $workspace_id ?>">← К списку проектов</a>
     <h1><?= $editId ? 'Редактирование проекта' : 'Создание проекта' ?></h1>
     
     <form method="POST">
@@ -107,7 +106,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <select name="customer_id">
             <option value="">— Без заказчика —</option>
             <?php 
-            $customers = $db->query("SELECT id, name, director_name FROM customers ORDER BY name, director_name")->fetchAll();
+            // ИСПРАВЛЕНИЕ: фильтр по workspace_id
+            $stmt = $db->prepare("SELECT id, name, director_name FROM customers WHERE workspace_id = ? ORDER BY name, director_name");
+            $stmt->execute([$workspace_id]);
+            $customers = $stmt->fetchAll();
+            
             foreach ($customers as $c): ?>
                 <option value="<?= $c['id'] ?>" <?= ($project['customer_id']??0)==$c['id']?'selected':'' ?>>
                     <?= htmlspecialchars($c['name'] ?: $c['director_name']) ?>

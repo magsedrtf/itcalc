@@ -23,8 +23,17 @@ $stmt->execute([$workspace_id]);
 $customers = $stmt->fetchAll();
 
 if (isset($_GET['delete'])) {
+    $id = (int)$_GET['delete'];
+    
+    // Проверяем, есть ли проекты с этим заказчиком
+    $check = $db->prepare("SELECT COUNT(*) FROM projects WHERE customer_id = ?");
+    $check->execute([$id]);
+    if ($check->fetchColumn() > 0) {
+        die("Нельзя удалить заказчика, так как он используется в проектах!");
+    }
+    
     $stmt = $db->prepare("DELETE FROM customers WHERE id = ? AND workspace_id = ?");
-    $stmt->execute([(int)$_GET['delete'], $workspace_id]);
+    $stmt->execute([$id, $workspace_id]);
     header("Location: customers.php?workspace_id=$workspace_id");
     exit;
 }

@@ -8,12 +8,15 @@ if (!$user_id) {
     exit;
 }
 
-// Получаем party_id текущего пользователя
+
+$canManageUsers     = hasPermission('manage_users');
+$canViewCredentials = hasPermission('view_user_credentials');
+
+
 $stmt = $db->prepare("SELECT party_id FROM users WHERE id = ?");
 $stmt->execute([$user_id]);
 $current_party_id = $stmt->fetchColumn();
 
-// Получаем пользователей только своей партии
 $stmt = $db->prepare("SELECT u.*, GROUP_CONCAT(r.name) as roles 
     FROM users u 
     LEFT JOIN user_roles ur ON u.id = ur.user_id 
@@ -23,9 +26,6 @@ $stmt = $db->prepare("SELECT u.*, GROUP_CONCAT(r.name) as roles
     ORDER BY u.last_name");
 $stmt->execute([$current_party_id]);
 $team = $stmt->fetchAll();
-
-// Проверка права на просмотр логинов и паролей
-$canViewCredentials = hasPermission('view_user_credentials');
 ?>
 
 <!DOCTYPE html>
@@ -45,9 +45,11 @@ $canViewCredentials = hasPermission('view_user_credentials');
 </head>
 <body>
     <a href="index.php">← На главную</a>
-    <h1>👥 Моя команда</h1>
+    <h1>Моя команда</h1>
     
-    <a href="add_user.php" class="btn" style="background:#4CAF50">+ Добавить человека в команду</a>
+    <?php if ($canManageUsers): ?>
+        <a href="add_user.php" class="btn" style="background:#4CAF50">+ Добавить человека в команду</a>
+    <?php endif; ?>
     
     <table>
         <tr>
@@ -64,7 +66,6 @@ $canViewCredentials = hasPermission('view_user_credentials');
             <td><?= htmlspecialchars($member['position']) ?></td>
             <td><?= htmlspecialchars($member['roles'] ?? '—') ?></td>
             
-            <!-- Логин -->
             <td>
                 <?php if ($member['id'] == $user_id || $canViewCredentials): ?>
                     <?= htmlspecialchars($member['email']) ?>
@@ -73,7 +74,6 @@ $canViewCredentials = hasPermission('view_user_credentials');
                 <?php endif; ?>
             </td>
             
-            <!-- Пароль -->
             <td>
                 <?php if ($member['id'] == $user_id): ?>
                     <strong>—</strong> <small>(ваш аккаунт)</small>
@@ -85,8 +85,11 @@ $canViewCredentials = hasPermission('view_user_credentials');
             </td>
             
             <td>
-                <a href="edit_user.php?id=<?= $member['id'] ?>" class="btn" style="background:#2196F3">Редактировать</a>
-                <?php if ($member['id'] != $user_id): ?>
+                <?php if ($canManageUsers): ?>
+                    <a href="edit_user.php?id=<?= $member['id'] ?>" class="btn" style="background:#2196F3">Редактировать</a>
+                <?php endif; ?>
+
+                <?php if ($canManageUsers && $member['id'] != $user_id): ?>
                     <a href="?delete=<?= $member['id'] ?>" class="btn btn-delete" onclick="return confirm('Удалить пользователя?')">Удалить</a>
                 <?php endif; ?>
             </td>

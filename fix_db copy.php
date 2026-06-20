@@ -1,49 +1,27 @@
 <?php
 require_once 'config.php';
+require_once 'auth.php';
 
-echo "<h2>🔧 Исправление CHECK constraint для ресурсов...</h2>";
+$user_id = $_COOKIE['user_id'] ?? null;
+if (!$user_id) die("Не авторизован");
 
-try {
-    // Удаляем старую таблицу и создаём новую с правильным CHECK
-    $db->exec("DROP TABLE IF EXISTS project_resources_old");
-    $db->exec("ALTER TABLE project_resources RENAME TO project_resources_old");
+echo "<h2>Проверка прав для пользователя ID: $user_id</h2>";
 
-    $db->exec("
-        CREATE TABLE project_resources (
-            id INTEGER PRIMARY KEY,
-            project_id INTEGER NOT NULL,
-            resource_type TEXT NOT NULL CHECK (resource_type IN ('Сотрудник', 'Исполнитель', 'Субподрядчик', 'Оборудование')),
-            resource_id INTEGER,
-            resource_name TEXT NOT NULL,
-            service_name TEXT,
-            start_date DATE,
-            end_date DATE,
-            quantity REAL NOT NULL,
-            unit_type TEXT NOT NULL,
-            unit_cost REAL NOT NULL,
-            margin_percent REAL DEFAULT 0,
-            FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
-        )
-    ");
+echo "isGlobalAdmin(): " . (isGlobalAdmin() ? '✅ Да' : '❌ Нет') . "<br><br>";
 
-    // Копируем данные из старой таблицы
-    $db->exec("
-        INSERT INTO project_resources 
-        (id, project_id, resource_type, resource_id, resource_name, service_name, 
-         start_date, end_date, quantity, unit_type, unit_cost, margin_percent)
-        SELECT 
-        id, project_id, resource_type, resource_id, resource_name, service_name, 
-        start_date, end_date, quantity, unit_type, unit_cost, margin_percent
-        FROM project_resources_old
-    ");
+$perms = ['manage_projects', 'manage_resources', 'view_margin', 'generate_documents'];
 
-    $db->exec("DROP TABLE project_resources_old");
-
-    echo "<p style='color:green; font-weight:bold'>✅ CHECK constraint успешно обновлён! Теперь можно добавлять Субподрядчиков.</p>";
-
-} catch (Exception $e) {
-    echo "<p style='color:red'>Ошибка: " . htmlspecialchars($e->getMessage()) . "</p>";
+foreach ($perms as $p) {
+    $val = hasPermission($p);
+    echo "$p → <b>" . ($val ? '✅ TRUE' : '❌ FALSE') . "</b><br>";
 }
 
-echo "<br><a href='projects.php'>→ Вернуться к проектам</a>";
+// Покажи что в базе
+$stmt = $db->prepare("SELECT permission, value FROM user_permissions WHERE user_id = ?");
+$stmt->execute([$user_id]);
+$rows = $stmt->fetchAll();
+
+echo "<h3>Записи в базе:</h3><pre>";
+print_r($rows);
+echo "</pre>";
 ?>

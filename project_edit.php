@@ -38,10 +38,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $customer_id = !empty($_POST['customer_id']) ? (int)$_POST['customer_id'] : null;
 
     if ($editId) {
+        // Исправленный UPDATE без updated_at
         $stmt = $db->prepare("UPDATE projects SET 
             name=?, start_date=?, end_date=?, description=?, 
-            technical_task=?, tax_rate=?, status=?, customer_id=?, 
-            updated_at=CURRENT_TIMESTAMP WHERE id=?");
+            technical_task=?, tax_rate=?, status=?, customer_id=? 
+            WHERE id=?");
         $stmt->execute([$name, $start_date, $end_date, $description, 
                         $technical_task, $tax_rate, $status, $customer_id, $editId]);
     } else {

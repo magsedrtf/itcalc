@@ -53,17 +53,22 @@ $projects = $stmt->fetchAll();
     <a href="workspaces.php">Рабочие области</a>
     <h1>Рабочая область — Проекты</h1>
 
-    <div class="menu">
-    <?php if (canManageCustomers()): ?>
-    <a href="customers.php?workspace_id=<?= $workspace_id ?>">Заказчики</a>
-    <?php endif; ?>
-    
-    <?php if (canManageResources() || hasPermission('manage_employees')): ?>
-    <a href="employees.php?workspace_id=<?= $workspace_id ?>">Сотрудники</a>
-    <a href="executors.php?workspace_id=<?= $workspace_id ?>">Исполнители</a>
-    <a href="equipment.php?workspace_id=<?= $workspace_id ?>">Оборудование</a>
-    <a href="subcontractors.php?workspace_id=<?= $workspace_id ?>">Субподрядчики</a>
-    <?php endif; ?>
+        <div class="menu">
+        <?php if (canManageCustomers() || isGlobalAdmin()): ?>
+        <a href="customers.php?workspace_id=<?= $workspace_id ?>">Заказчики</a>
+        <?php endif; ?>
+        
+        <?php if (canManageResources() || hasPermission('manage_employees') || isGlobalAdmin()): ?>
+        <a href="employees.php?workspace_id=<?= $workspace_id ?>">Сотрудники</a>
+        <a href="executors.php?workspace_id=<?= $workspace_id ?>">Исполнители</a>
+        <a href="equipment.php?workspace_id=<?= $workspace_id ?>">Оборудование</a>
+        <a href="subcontractors.php?workspace_id=<?= $workspace_id ?>">Субподрядчики</a>
+        <?php endif; ?>
+        
+        <!-- Кнопка создания проекта -->
+        <?php if (canManageProjects() || isGlobalAdmin()): ?>
+        <a href="project_edit.php?workspace_id=<?= $workspace_id ?>" class="btn-add">+ Новый проект</a>
+        <?php endif; ?>
     </div>
 
     <h2>Список проектов</h2>
